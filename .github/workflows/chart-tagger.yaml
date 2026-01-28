@@ -41,7 +41,7 @@ jobs:
               uses: peter-evans/create-pull-request@v6
               with:
                   delete-branch: true
-                  token: ${{ secrets.PAT }}
+                  token: ${{ secrets.GITHUB_TOKEN }}
                   commit-message: Prod deployment for release version ${{ github.event.client_payload.release_tag }}
                   title: '🏷️ Bump image version to ${{ github.event.client_payload.release_tag }}'
                   author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>

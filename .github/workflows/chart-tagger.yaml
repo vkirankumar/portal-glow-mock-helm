@@ -13,6 +13,11 @@ on:
                 description: Service Now change request number
                 type: string
                 required: true
+            release_note:
+                description: 'Confluence link to release notes'
+                type: string
+                required: true
+                
 permissions:
   contents: write
   pull-requests: write

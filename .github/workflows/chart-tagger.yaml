@@ -1,7 +1,9 @@
 name: Helm Chart Tagger
 
 on:
-    workflow_call:
+    repository_dispatch:
+        types: [helm_chart_image_tag_update]
+    workflow_dispatch:
         inputs:
             release_tag:
                 description: Image tag to update values.yaml file
@@ -21,9 +23,7 @@ jobs:
 
             - name: Update image tag
               run: |
-                pwd
-                ls -ltr
-                sed -E "/image/{n;s~(tag: ).*~\1${{inputs.release_tag}}~}" ./portal-glow-mock-helm/values.yaml
+                sed -E "/image/{n;s~(tag: ).*~\1${{github.event.client_payload.release_tag}}~}" values.yaml
 
             - name: Create Pull Request
               id: cpr
@@ -31,14 +31,14 @@ jobs:
               with:
                   delete-branch: true
                   token: ${{ secrets.GITHUB_TOKEN }}
-                  commit-message: Prod deployment for release version ${{ inputs.release_tag }}
-                  title: '🏷️ Bump image version to ${{ inputs.release_tag }}'
+                  commit-message: Prod deployment for release version ${{ github.event.client_payload.release_tag }}
+                  title: '🏷️ Bump image version to ${{ github.event.client_payload.release_tag }}'
                   author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
-                  branch: 'auto-pr-branch-${{ inputs.release_tag }}'
+                  branch: 'auto-pr-branch-${{ github.event.client_payload.release_tag }}'
                   base: main
                   body: |
                        AUTO GENERATED PR:
-                        Service Now Change Request Number: ${{ inputs.chr }}
-                        Release Version: ${{ inputs.release_tag }} 
+                        Service Now Change Request Number: ${{ github.event.client_payload.chr }}
+                        Release Version: ${{ github.event.client_payload.release_tag }} 
                   labels: |
                     automated pr

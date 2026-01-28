@@ -1,0 +1,42 @@
+name: Helm Chart Tagger
+
+on:
+    workflow_dispatch:
+        inputs:
+            release_tag:
+                description: Image tag to update values.yaml file
+                type: string
+                required: true
+            chr:
+                description: Service Now change request number
+                type: string
+                required: true
+
+jobs:
+    update-helm-chart:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Update image tag
+              run: |
+                sed -E "/image/{n;s~(tag: ).*~\1${{inputs.release_tag}}~}" values.yaml
+
+            - name: Create Pull Request
+              id: cpr
+              uses: peter-evans/create-pull-request@v6
+              with:
+                  delete-branch: true
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  commit-message: Prod deployment for release version ${{ inputs.release_tag }}
+                  title: '🏷️ Bump image version to ${{ inputs.release_tag }}'
+                  author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
+                  branch: 'auto-pr-branch-${{ inputs.release_tag }}'
+                  base: main
+                  body: |
+                       AUTO GENERATED PR:
+                        Service Now Change Request Number: ${{ inputs.chr }}
+                        Release Version: ${{ inputs.release_tag }} 
+                  labels: |
+                    automated pr

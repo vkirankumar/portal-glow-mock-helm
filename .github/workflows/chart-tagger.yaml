@@ -43,7 +43,7 @@ jobs:
                   delete-branch: true
                   token: ${{ secrets.GITHUB_TOKEN }}
                   commit-message: Prod deployment for release version ${{ github.event.client_payload.release_tag }}
-                  title: '🏷️ Bump image version to ${{ github.event.client_payload.release_tag }}'
+                  title: '🏷️ PROD RELEASE: Bump image version to ${{ github.event.client_payload.release_tag }}'
                   author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
                   branch: 'auto-pr-branch-${{ github.event.client_payload.release_tag }}'
                   base: main
@@ -51,5 +51,6 @@ jobs:
                        AUTO GENERATED PR:
                         Service Now Change Request Number: ${{ github.event.client_payload.chr }}
                         Release Version: ${{ github.event.client_payload.release_tag }} 
+                        Release Note: ${{ github.event.client_payload.release_note }}
                   labels: |
                     automated pr

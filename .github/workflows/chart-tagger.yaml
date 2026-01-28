@@ -13,6 +13,9 @@ on:
                 description: Service Now change request number
                 type: string
                 required: true
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
     update-helm-chart:
@@ -20,17 +23,24 @@ jobs:
 
         steps:
             - uses: actions/checkout@v6
+              with:
+                token: ${{ secrets.PAT }}
+                persist-credentials: false
 
             - name: Update image tag
               run: |
-                sed -E "/image/{n;s~(tag: ).*~\1${{github.event.client_payload.release_tag}}~}" values.yaml
+                sed -i -E "/image/{n;s~(tag: ).*~\1${{github.event.client_payload.release_tag}}~}" values.yaml
+                git diff
+            
+            - name: Clean git auth headers
+              run: git config --global --unset-all http.https://github.com/.extraheader || true
 
             - name: Create Pull Request
               id: cpr
               uses: peter-evans/create-pull-request@v6
               with:
                   delete-branch: true
-                  token: ${{ secrets.GITHUB_TOKEN }}
+                  token: ${{ secrets.PAT }}
                   commit-message: Prod deployment for release version ${{ github.event.client_payload.release_tag }}
                   title: '🏷️ Bump image version to ${{ github.event.client_payload.release_tag }}'
                   author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>

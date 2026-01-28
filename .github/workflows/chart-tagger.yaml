@@ -24,7 +24,7 @@ jobs:
         steps:
             - uses: actions/checkout@v6
               with:
-                persist-credentials: true
+                persist-credentials: false
 
             - name: Update image tag
               run: |
@@ -32,7 +32,9 @@ jobs:
                 git diff
             
             - name: Clean git auth headers
-              run: git config --global --unset-all http.https://github.com/.extraheader || true
+              run: |
+                git config --global --remove-section http.https://github.com || true
+                git config --global --unset-all http.https://github.com/.extraheader || true
 
             - name: Create Pull Request
               id: cpr

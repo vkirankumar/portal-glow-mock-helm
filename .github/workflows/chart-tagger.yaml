@@ -63,7 +63,7 @@ jobs:
     port-logs:
         if: success() || failure()
         needs: [ update-helm-chart ]
-        uses: vkirankumar/portal-glow-mock/.github/workflows/post-logs-to-elastic.yaml
+        uses: vkirankumar/portal-glow-mock/.github/workflows/post-logs-to-elastic.yaml@main
         with:
             release_tag: ${{ needs.generate-release-tag.outputs.release_tag}}
         secrets:
@@ -72,7 +72,7 @@ jobs:
 
     notify-job-status:
         if: success() || failure()
-        uses: vkirankumar/portal-glow-mock/.github/workflows/notify-events.yaml
+        uses: vkirankumar/portal-glow-mock/.github/workflows/notify-events.yaml@main
         needs: [ update-helm-chart ]
         with:
             release_tag: ${{ needs.generate-release-tag.outputs.release_tag}}

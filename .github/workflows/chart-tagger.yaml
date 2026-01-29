@@ -73,7 +73,7 @@ jobs:
     notify-job-status:
         if: success() || failure()
         uses: vkirankumar/portal-glow-mock/.github/workflows/notify-events.yaml@main
-        needs: [ update-helm-chart ]
+        needs: [ update-helm-chart, port-logs ]
         with:
             release_tag: ${{github.event.client_payload.release_tag}}
             notfication_summary: "[HELM-PR] React Portals <b>PROD</b> deployment"

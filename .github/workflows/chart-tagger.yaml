@@ -65,7 +65,7 @@ jobs:
         needs: [ update-helm-chart ]
         uses: vkirankumar/portal-glow-mock/.github/workflows/post-logs-to-elastic.yaml@main
         with:
-            release_tag: ${{ needs.generate-release-tag.outputs.release_tag}}
+            release_tag: ${{github.event.client_payload.release_tag}}
         secrets:
             ELASTIC_HOST: ${{ secrets.ELASTIC_HOST }}
             ELASTIC_KEY: ${{ secrets.ELASTIC_KEY }}
@@ -75,7 +75,7 @@ jobs:
         uses: vkirankumar/portal-glow-mock/.github/workflows/notify-events.yaml@main
         needs: [ update-helm-chart ]
         with:
-            release_tag: ${{ needs.generate-release-tag.outputs.release_tag}}
+            release_tag: ${{github.event.client_payload.release_tag}}
             notfication_summary: "[HELM-PR] React Portals <b>PROD</b> deployment"
         secrets:
             TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}

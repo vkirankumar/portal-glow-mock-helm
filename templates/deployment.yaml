@@ -13,12 +13,11 @@ spec:
       {{- include "..selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
-      release.tag: "{{ .Values.image.tag | default .Chart.AppVersion }}"
-    {{- with .Values.podAnnotations }}
-    {{ toYaml . | nindent 6 }}
-    {{- end }}
+        release.tag: "{{ .Values.image.tag | default .Chart.AppVersion }}"
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       labels:
         {{- include "..labels" . | nindent 8 }}
         {{- with .Values.podLabels }}

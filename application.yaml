@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/vkirankumar/portal-glow-mock-helm
     targetRevision: HEAD
-    path: .                       # folder containing Chart.yaml
+    path: .
     helm:
       valueFiles:
         - values.yaml

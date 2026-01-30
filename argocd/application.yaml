@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portal-glow
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: portal-glow
+spec:
+  project: default
+
+  source:
+    repoURL: "https://github.com/vkirankumar/portal-glow-mock-helm"
+    targetRevision: HEAD
+    path: "portal-glow"
+    helm:
+      valueFiles:
+        - values.yaml
+      parameters:
+        # Optionally override image.tag if needed
+        - name: image.tag
+          value: "{{ .Values.image.tag }}" 
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
+  # Annotations dynamically injected from Helm values.yaml
+  metadata:
+    annotations:
+      release.tag: "{{ .Values.image.tag }}"

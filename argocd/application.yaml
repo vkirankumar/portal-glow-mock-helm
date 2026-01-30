@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/your-org/portal-glow-helm'
+    repoURL: 'https://github.com/vkirankumar/portal-glow-mock-helm'
     targetRevision: HEAD
     path: .
     chart: portal-glow

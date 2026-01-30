@@ -3,33 +3,30 @@ kind: Application
 metadata:
   name: portal-glow
   namespace: argocd
-  labels:
-    app.kubernetes.io/name: portal-glow
 spec:
   project: default
-
   source:
-    repoURL: "https://github.com/vkirankumar/portal-glow-mock-helm"
+    repoURL: 'https://github.com/your-org/portal-glow-helm'
     targetRevision: HEAD
-    path: "portal-glow"
+    path: .
+    chart: portal-glow
     helm:
       valueFiles:
         - values.yaml
       parameters:
-        # Optionally override image.tag if needed
         - name: image.tag
-          value: "{{ .Values.image.tag }}" 
-
+          value: "" # picks tag from values.yaml
   destination:
-    server: https://kubernetes.default.svc
+    server: 'https://kubernetes.default.svc'
     namespace: default
-
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-
-  # Annotations dynamically injected from Helm values.yaml
-  metadata:
-    annotations:
-      release.tag: "{{ .Values.image.tag }}"
+    syncOptions:
+      - CreateNamespace=true
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/template/metadata/annotations/release.tag

@@ -6,18 +6,15 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/vkirankumar/portal-glow-mock-helm'
+    repoURL: https://github.com/vkirankumar/portal-glow-mock-helm
     targetRevision: HEAD
-    path: .
-    chart: portal-glow
+    path: .                       # folder containing Chart.yaml
+    chart: portal-glow            # must match Chart.yaml name
     helm:
       valueFiles:
         - values.yaml
-      parameters:
-        - name: image.tag
-          value: "" # picks tag from values.yaml
   destination:
-    server: 'https://kubernetes.default.svc'
+    server: https://kubernetes.default.svc
     namespace: default
   syncPolicy:
     automated:

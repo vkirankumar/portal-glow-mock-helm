@@ -34,7 +34,7 @@ jobs:
             - name: Update image tag
               run: |
                 sed -i -E "/image/{n;s~(tag: ).*~\1${{github.event.client_payload.release_tag}}~}" values.yaml
-                sed -i -E "/metadata/annotations/{n;s~(release.tag: ).*~\1${{github.event.client_payload.release_tag}}~}" application.yaml
+                sed -i -E "/metadata:/{n;n;n;n;s/\(release.tag\).*/\1: ${{github.event.client_payload.release_tag}}/}" application.yaml
                 git diff
             
             - name: Clean git auth headers

@@ -4,7 +4,7 @@ metadata:
   name: portal-glow
   namespace: argocd
   annotations:
-      release.tag: "4dccaeb"
+      release.tag: "1111"
 spec:
   project: default
   source:

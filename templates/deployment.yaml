@@ -18,7 +18,7 @@ spec:
         release.tag: "{{ .Values.image.tag | default .Chart.AppVersion }}"
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- end }}
       labels:
         {{- include "..labels" . | nindent 8 }}
         {{- with .Values.podLabels }}

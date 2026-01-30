@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/vkirankumar/portal-glow-mock-helm
     targetRevision: HEAD
-    path: .                       # folder containing Chart.yaml
+    path: argocd                       # folder containing Chart.yaml
     chart: portal-glow            # must match Chart.yaml name
     helm:
       valueFiles:

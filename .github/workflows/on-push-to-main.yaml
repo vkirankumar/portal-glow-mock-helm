@@ -1,14 +1,14 @@
 name: On PR Merge
 
 on:
-    workflow_dispatch:
-    # pull_request:
-    #   types: 
-    #     [closed]
+    # workflow_dispatch:
+    pull_request:
+      types: 
+        [closed]
 
 jobs:
     read-release-tag:
-        # if: github.event.pull_request.merged == true
+        if: github.event.pull_request.merged == true
         runs-on: ubuntu-latest
         outputs:
           release_tag: ${{ steps.vars.outputs.release_tag }}

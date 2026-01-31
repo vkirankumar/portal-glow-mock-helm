@@ -1,4 +1,4 @@
-name: On push to main
+name: On PR Merge
 
 on:
     workflow_dispatch:
@@ -19,7 +19,7 @@ jobs:
             - name: Get image tag
               run: |
                 IMAGE_TAG=$(sed -n '/^image:/,/^[^ ]/ s/^[[:space:]]*tag:[[:space:]]*//p' values.yaml)
-                echo "RELEASE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+                echo "RELEASE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
     port-logs:
         if: success() || failure()

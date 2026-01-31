@@ -77,7 +77,6 @@ jobs:
         needs: [ update-helm-chart, port-logs ]
         with:
             release_tag: ${{github.event.client_payload.release_tag}}
-            notfication_summary: "React Portals <b>PROD</b> deployment"
-            notification_step: "CREATE-HELM-PR"
+            notfication_summary: "[CREATE-HELM-PR] React Portals <b>PROD</b> deployment"
         secrets:
             TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}

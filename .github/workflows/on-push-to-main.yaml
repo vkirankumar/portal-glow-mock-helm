@@ -39,6 +39,7 @@ jobs:
         needs: [ read-release-tag, port-logs ]
         with:
             release_tag: ${{ needs.read-release-tag.outputs.release_tag }}
-            notfication_summary: "[MERGE-HELM-PR] React Portals <b>PROD</b> deployment"
+            notfication_summary: "React Portals <b>PROD</b> deployment"
+            notification_step: "MERGE_HELM_PR"
         secrets:
             TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}

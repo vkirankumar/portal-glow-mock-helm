@@ -1,0 +1,41 @@
+name: On push to main
+
+on:
+    push:
+      branches:
+        - main
+
+jobs:
+    read-release-tag:
+        if: ${{ github.event.pull_request.merged }}
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                persist-credentials: false
+
+            - name: Get image tag
+              run: |
+                IMAGE_TAG=$(sed -n '/^image:/,/^[^ ]/ s/^[[:space:]]*tag:[[:space:]]*//p' values.yaml)
+                echo "RELEASE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+    port-logs:
+        if: success() || failure()
+        needs: [ read-release-tag ]
+        uses: vkirankumar/portal-glow-mock/.github/workflows/post-logs-to-elastic.yaml@main
+        with:
+            release_tag: ${{ needs.read-release-tag.outputs.RELEASE_TAG }}
+        secrets:
+            ELASTIC_HOST: ${{ secrets.ELASTIC_HOST }}
+            ELASTIC_KEY: ${{ secrets.ELASTIC_KEY }}
+
+    notify-job-status:
+        if: success() || failure()
+        uses: vkirankumar/portal-glow-mock/.github/workflows/notify-events.yaml@main
+        needs: [ read-release-tag, port-logs ]
+        with:
+            release_tag: ${{ needs.read-release-tag.outputs.RELEASE_TAG }}
+            notfication_summary: "[MERGE-HELM-PR] React Portals <b>PROD</b> deployment"
+        secrets:
+            TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}

@@ -1,10 +1,10 @@
 name: On PR Merge
 
 on:
-    # workflow_dispatch:
-    pull_request:
-      types: 
-        [closed]
+    workflow_dispatch:
+    # pull_request:
+    #   types: 
+    #     [closed]
 
 jobs:
     read-release-tag:
@@ -20,7 +20,7 @@ jobs:
             - name: Get image tag
               id: vars
               run: |
-                IMAGE_TAG=$(sed -n '/^image:/,/^[^ ]/ s/^[[:space:]]*tag:[[:space:]]*//p' values.yaml)
+                IMAGE_TAG=$(sed -n '/^image:/,/^[^ ]/ s/^[[:space:]]*tag:[[:space:]]*["'\'']*\(.*[^"'\'']\)["'\'']*[[:space:]]*$/\1/p' values.yaml)
                 echo "release_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
     port-logs:

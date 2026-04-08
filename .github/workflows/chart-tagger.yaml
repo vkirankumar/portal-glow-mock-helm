@@ -68,9 +68,9 @@ jobs:
                     -H "Content-Type: application/json" \
                     https://yfoa5flvfk.execute-api.us-east-1.amazonaws.com/staging/start-release \
                     -d '{
-                        "repo": "${{ github.event.repository.name }}",
+                        "repo": "${{ github.event.repository.full_name }}",
                         "sha": "${{ steps.cpr.outputs.pull-request-head-sha }}",
-                        "release_id": "${{ inputs.release_tag }}"
+                        "release_id": "${{ github.event.client_payload.release_tag }}"
                     }')
                     echo "Response: $response"
                     status=$(echo "$response" | jq -r '.status')

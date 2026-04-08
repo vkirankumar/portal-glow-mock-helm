@@ -4,7 +4,7 @@ metadata:
   name: portal-glow
   namespace: argocd
   annotations:
-      release.tag: "prod-portal-glow-mock-github-1775656497108"
+      release.tag: "prod-portal-glow-mock-github-1775656723322"
 spec:
   project: default
   source:

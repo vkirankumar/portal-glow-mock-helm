@@ -9,8 +9,8 @@ on:
                 description: Image tag to update values.yaml file
                 type: string
                 required: true
-            chr:
-                description: Service Now change request number
+            release_id:
+                description: Unique ARM release ID for the deployment
                 type: string
                 required: true
             release_note:
@@ -61,23 +61,79 @@ jobs:
                   labels: |
                     automated pr
 
+            - name: Enable Pull Request Automerge
+              run: gh pr merge --merge --auto "${{ steps.cpr.outputs.pull-request-number }}"
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     
-            - name: Start release
+            # - name: Start release
+            #   run: |
+            #     response=$(curl -X POST \
+            #         -H "Content-Type: application/json" \
+            #         https://yfoa5flvfk.execute-api.us-east-1.amazonaws.com/staging/start-release \
+            #         -d '{
+            #             "repo": "${{ github.event.repository.full_name }}",
+            #             "sha": "${{ steps.cpr.outputs.pull-request-head-sha }}",
+            #             "release_id": "${{ github.event.client_payload.release_tag }}"
+            #         }')
+            #         echo "Response: $response"
+            #         status=$(echo "$response" | jq -r '.status')
+            #         if [ "$status" -ne 200 ]; then
+            #           echo "Error: API call failed with status $status"
+            #           exit 1
+            #         fi
+
+            - name: Get ARM Access Token
               run: |
-                response=$(curl -X POST \
+                RESPONSE=$(curl -s -X POST \
+                  "${{secrets.ARM_COGNITO_ENDPOINT}}" \
+                  -H "Content-Type: application/x-www-form-urlencoded" \
+                  -u "${{ secrets.ARM_COGNITO_CLIENTID }}:${{ secrets.ARM_COGNITO_CLIENTSECRET }}" \
+                  --data-urlencode "grant_type=client_credentials" \
+                  --data-urlencode "scope=bridge-api/arm-request-approval")
+
+                TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
+
+                if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
+                  echo "Failed to obtain access token"
+                  echo "$RESPONSE"
+                  exit 1
+                fi
+                echo "ARM_TOKEN=$TOKEN" >> $GITHUB_ENV
+
+            - name: Request ARM Approval
+              run: |
+                RESPONSE=$(curl -X POST \
+                    "${{secrets.ARM_HOST}}/prod/arm/request/approval" \
+                    -H "Authorization: Bearer $ARM_TOKEN" \
                     -H "Content-Type: application/json" \
-                    https://yfoa5flvfk.execute-api.us-east-1.amazonaws.com/staging/start-release \
                     -d '{
-                        "repo": "${{ github.repository.name }}",
-                        "sha": "${{ steps.cpr.outputs.pull-request-head-sha }}",
-                        "release_id": "${{ needs.generate-release-tag.outputs.release_tag }}"
+                      "release_id": ${{github.event.client_payload.release_id}},
+                      "deployment_context": {
+                        "artifact": {
+                          "type": "docker",
+                          "name": "glow-portals:${{github.event.client_payload.release_tag}}",
+                          "version": "${{github.event.client_payload.release_tag}}",
+                          "artifact_uri": "http://dockerhub.com/artifactory/"
+                        },
+                        "execution_context": {
+                          "commit_sha": "${{ steps.cpr.outputs.pull-request-head-sha }}",
+                          "pull_request_number": "${{ steps.cpr.outputs.pull-request-number }}",
+                          "tag": "${{github.event.client_payload.release_tag}}",
+                          "author": "${{github.actor}}",
+                          "commit_message": "Prod deployment for release version ${{ github.event.client_payload.release_tag }}"
+                        }
+                      }
                     }')
-                    echo "Response: $response"
-                    status=$(echo "$response" | jq -r '.status')
+        
+                    echo "Response: $RESPONSE"
+                    status=$(echo "$RESPONSE" | jq -r '.status')
                     if [ "$status" -ne 200 ]; then
-                      echo "Error: API call failed with status $status"
+                      echo "Error: Request ARM approval API call failed with status $status"
                       exit 1
                     fi
+            
 
     # port-logs:
     #     if: success() || failure()

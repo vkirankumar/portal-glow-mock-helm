@@ -12,6 +12,7 @@ jobs:
         runs-on: ubuntu-latest
         outputs:
           release_tag: ${{ steps.vars.outputs.release_tag }}
+          release_id: ${{ steps.vars.output.release_id }}
         steps:
             - uses: actions/checkout@v6
               with:
@@ -19,26 +20,74 @@ jobs:
 
             - name: Get image tag
               id: vars
+              env: 
+                MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+                
               run: |
+
+                echo "Merge commit: $MERGE_SHA"
+
+                COMMIT_MESSAGE=$(git log -1 --format=%B "$MERGE_SHA")
+
+                echo "Commit message:"
+                echo "$COMMIT_MESSAGE"
+
+                RELEASE_ID=$(echo "$COMMIT_MESSAGE" | \
+                  sed -n 's/^ARM-Release-ID:[[:space:]]*//p' | head -1)
+
+                if [ -z "$RELEASE_ID" ]; then
+                  echo "ERROR: ARM Release ID not found in merge commit"
+                  exit 1
+                fi
+
+                echo "Release ID: $RELEASE_ID"
+
+                echo "release_id=$RELEASE_ID" >> "$GITHUB_OUTPUT"
+                
                 IMAGE_TAG=$(sed -n '/^image:/,/^[^ ]/ s/^[[:space:]]*tag:[[:space:]]*["'\'']*\(.*[^"'\'']\)["'\'']*[[:space:]]*$/\1/p' values.yaml)
                 echo "release_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+                echo "release_id=$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-    port-logs:
+    post-feedback:
         if: success() || failure()
         needs: [ read-release-tag ]
-        uses: vkirankumar/portal-glow-mock/.github/workflows/post-logs-to-elastic.yaml@main
-        with:
-            release_tag: ${{ needs.read-release-tag.outputs.release_tag }}
-        secrets:
-            ELASTIC_HOST: ${{ secrets.ELASTIC_HOST }}
-            ELASTIC_KEY: ${{ secrets.ELASTIC_KEY }}
+        runs-on: ubuntu-latest
+        steps:
+        - name: Get ARM Access Token
+          run: |
+            RESPONSE=$(curl -s -X POST \
+              "${{secrets.ARM_COGNITO_ENDPOINT}}" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -u "${{ secrets.ARM_COGNITO_CLIENTID }}:${{ secrets.ARM_COGNITO_CLIENTSECRET }}" \
+              --data-urlencode "grant_type=client_credentials" \
+              --data-urlencode "scope=bridge-api/arm-register-release")
 
-    notify-job-status:
-        if: success() || failure()
-        uses: vkirankumar/portal-glow-mock/.github/workflows/notify-events.yaml@main
-        needs: [ read-release-tag, port-logs ]
-        with:
-            release_tag: ${{ needs.read-release-tag.outputs.release_tag }}
-            notfication_summary: "[MERGE-HELM-PR] React Portals <b>PROD</b> deployment"
-        secrets:
-            TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}
+            TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
+
+            if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
+              echo "Failed to obtain access token"
+              echo "$RESPONSE"
+              exit 1
+            fi
+
+            echo "ARM_TOKEN=$TOKEN" >> $GITHUB_ENV
+      
+        - name: Register Release
+          id: vars
+          run: |
+              response=$(curl -X POST \
+                "${{secrets.ARM_HOST}}/prod/arm/webhook/callback" \
+              -H "Authorization: Bearer $ARM_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "release_id": "${{ needs.read-release-tag.outputs.release_id }}",
+                "status": "",
+                "message": "${{ github.actor }}"
+              }')
+
+              echo "Response: $response"
+              status=$(echo "$response" | jq -r '.status')
+              if [ "$status" -ne 200 ]; then
+                echo "Error: API call failed with status $status"
+                exit 1
+              fi

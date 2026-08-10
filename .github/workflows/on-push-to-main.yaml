@@ -4,11 +4,10 @@ on:
     # workflow_dispatch:
     pull_request:
       types: 
-        - closed
+        [closed]
 
 permissions:
   contents: read
-  pull_requests: read
 
 jobs:
     read-release-tag:

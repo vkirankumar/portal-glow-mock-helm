@@ -3,8 +3,8 @@ name: On PR Merge
 on:
     # workflow_dispatch:
     pull_request:
-      types: 
-        [closed]
+       branches: [main]
+       types: [closed]
 
 permissions:
   contents: read
